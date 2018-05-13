@@ -56,28 +56,41 @@ getEmployee=(Token as text,departmentId as list)=>
         Source;
 getApproval=(Token as text)=>
     let
-        Approvaltype={"PROC-EF6YJDXRN2-X4XBZQ78RZW7FHBH5TCR1-Z1WJS4QI-84","PROC-EF6YJDXRN2-X4XBZQ78RZW7FHBH5TCR1-Z1WJS4QI-84","PROC-EF6YJDXRN2-X4XBZQ78RZW7FHBH5TCR1-E1WJS4QI-74","PROC-FF6Y696SO2-7I2FX6JQUD6G902HJR7X1-XJS8FKUI-TH","PROC-52IKRYIV-IB0U612TTCUSV2CK48EY1-KDNI9JFJ-1","PROC-EF6YJDXRN2-X4XBZQ78RZW7FHBH5TCR1-A0WJS4QI-54"},
+        Approvaltype={"PROC-EF6YJDXRN2-X4XBZQ78RZW7FHBH5TCR1-Z1WJS4QI-84","PROC-EF6YJDXRN2-X4XBZQ78RZW7FHBH5TCR1-E1WJS4QI-74","PROC-FF6Y696SO2-7I2FX6JQUD6G902HJR7X1-XJS8FKUI-TH","PROC-52IKRYIV-IB0U612TTCUSV2CK48EY1-KDNI9JFJ-1","PROC-EF6YJDXRN2-X4XBZQ78RZW7FHBH5TCR1-A0WJS4QI-54"},
         firstday=Date.StartOfYear(DateTime.LocalNow()),
         starttime=Number.Round(86400*(Number.From(firstday)-Number.From(#datetime(1970,1,1,8,0,0))),3)*1000,
         url="https://eco.taobao.com/router/rest",
+		//迟到审批
         data = List.Generate(
-              () => [cursor=0,result2=Table.FromRecords({})],
+              () => [cursor=0,result2=Table.FromRecords({}),type=""],
               each [cursor]<>null,
-              each[list=Xml.Tables(Web.Contents(url, [Content=Text.ToBinary("method=dingtalk.smartwork.bpms.processinstance.list&session="&Token&"&v=2.0&process_code=PROC-EF6YJDXRN2-X4XBZQ78RZW7FHBH5TCR1-Z1WJS4QI-84&start_time="&Number.ToText(starttime)&"&cursor="&Number.ToText([cursor])),
+              each[list=Xml.Tables(Web.Contents(url, [Content=Text.ToBinary("method=dingtalk.smartwork.bpms.processinstance.list&session="&Token&"&v=2.0&process_code=PROC-52IKRYIV-IB0U612TTCUSV2CK48EY1-KDNI9JFJ-1&start_time="&Number.ToText(starttime)&"&cursor="&Number.ToText([cursor])),
                                                 Headers=[#"Content-Type"="application/x-www-form-urlencoded;charset=utf-8"]])),
         result1 = Table.ExpandTableColumn(list, "result", {"ding_open_errcode", "result", "success"}, {"ding_open_errcode", "result.1", "success"}),
         result2 = Table.ExpandTableColumn(result1, "result.1", {"list", "next_cursor"}, {"list", "next_cursor"}),
         changetype = Table.TransformColumnTypes(result2,{{"next_cursor", Int64.Type}}),
-        cursor= changetype[next_cursor]{0},type="PROC-EF6YJDXRN2-X4XBZQ78RZW7FHBH5TCR1-Z1WJS4QI-84"]),
-        Table = Table.FromRecords(data)
-//         #"Expanded {0}" = Table.ExpandListColumn(Table, "data2"),
-//         #"Expanded {0}1" = Table.ExpandRecordColumn(#"Expanded {0}", "data2", {"i", "cursor", "result2", "list", "result1", "changetype", "type"}, {"i", "cursor", "result2", "list", "result1", "changetype", "type"}),
-//         #"Expanded {0}2" = Table.ExpandTableColumn(#"Expanded {0}1", "result2", {"ding_open_errcode", "list", "next_cursor", "success", "request_id"}, {"ding_open_errcode", "list.1", "next_cursor", "success", "request_id"}),
-//         #"Expanded {0}3" = Table.ExpandTableColumn(#"Expanded {0}2", "list.1", {"process_instance_top_vo"}, {"process_instance_top_vo"}),
-//         #"Expanded {0}4" = Table.ExpandTableColumn(#"Expanded {0}3", "process_instance_top_vo", {"approver_userid_list", "business_id", "cc_userid_list", "create_time", "finish_time", "form_component_values", "originator_dept_id", "originator_userid", "process_instance_id", "process_instance_result", "status", "title"}, {"approver_userid_list", "business_id", "cc_userid_list", "create_time", "finish_time", "form_component_values", "originator_dept_id", "originator_userid", "process_instance_id", "process_instance_result", "status", "title"}),
-//         #"Expanded {0}5" = Table.ExpandTableColumn(#"Expanded {0}4", "form_component_values", {"form_component_value_vo"}, {"form_component_value_vo"}),
-//         SourceTabel = Table.RemoveColumns(#"Expanded {0}5",{"i", "cursor", "ding_open_errcode", "approver_userid_list", "cc_userid_list", "next_cursor", "success", "request_id", "list", "result1", "changetype"}),
-//        //迟到审批
+        cursor= changetype[next_cursor]{0},type="PROC-52IKRYIV-IB0U612TTCUSV2CK48EY1-KDNI9JFJ-1"]),
+        Table = Table.FromRecords(data),      
+        #"Expanded {0}2" = Table.ExpandTableColumn(Table, "result2", {"ding_open_errcode", "list", "next_cursor", "success", "request_id"}, {"ding_open_errcode", "list.1", "next_cursor", "success", "request_id"}),
+        #"Expanded {0}3" = Table.ExpandTableColumn(#"Expanded {0}2", "list.1", {"process_instance_top_vo"}, {"process_instance_top_vo"}),
+        #"Expanded {0}4" = Table.ExpandTableColumn(#"Expanded {0}3", "process_instance_top_vo", {"approver_userid_list", "business_id", "cc_userid_list", "create_time", "finish_time", "form_component_values", "originator_dept_id", "originator_userid", "process_instance_id", "process_instance_result", "status", "title"}, {"approver_userid_list", "business_id", "cc_userid_list", "create_time", "finish_time", "form_component_values", "originator_dept_id", "originator_userid", "process_instance_id", "process_instance_result", "status", "title"}),
+        #"Expanded {0}5" = Table.ExpandTableColumn(#"Expanded {0}4", "form_component_values", {"form_component_value_vo"}, {"form_component_value_vo"}),
+        SourceTable = Table.RemoveColumns(#"Expanded {0}5",{ "cursor", "ding_open_errcode", "approver_userid_list", "cc_userid_list", "next_cursor", "success", "request_id"}),
+		 data1 = List.Generate(
+        () => [i=0],  
+        each [i] <Table.RowCount(SourceTable),
+        each [i=[i]+1], 
+        each[list=SourceTable{[i]},type=SourceTable[form_component_value_vo]{[i]}[value]{0},reason=SourceTable[form_component_value_vo]{[i]}[value]{1},
+        datetime=SourceTable[form_component_value_vo]{[i]}[value]{2},pic=SourceTable[form_component_value_vo]{[i]}[value]{3}]
+       ),
+       output = Table.FromRecords(data1),
+       Replace = Table.ReplaceValue(output,"[","",Replacer.ReplaceText,{"datetime"}),
+       Replace1 = Table.ReplaceValue(Replace,"]","",Replacer.ReplaceText,{"datetime"}),
+       SplitColumn = Table.SplitColumn(Replace1, "datetime", Splitter.SplitTextByDelimiter(",", QuoteStyle.Csv), {"datetime.1", "datetime.2", "datetime.3"}),
+       TransformColumn = Table.TransformColumnTypes(SplitColumn,{{"datetime.1", type datetime}, {"datetime.2", type datetime}, {"datetime.3", type number}}),
+	   RemoveRowsWithErrors=Table.RemoveRowsWithErrors(TransformColumn, {"type"}),
+       LateTbale = Table.RenameColumns(RemoveRowsWithErrors,{{"datetime.1", "startdate"}, {"datetime.2", "enddate"}, {"datetime.3", "hours"}})
+       //迟到审批
 //        Latelist = Table.SelectRows(SourceTabel, each ([type] = "PROC-52IKRYIV-IB0U612TTCUSV2CK48EY1-KDNI9JFJ-1")),
 //         data1 = List.Generate(
 //         () => [i=0],  
@@ -111,7 +124,7 @@ getApproval=(Token as text)=>
 //        LeaveTable = Table.RenameColumns(LeaveTransformColumn,{{"datetime.1", "startdate"}, {"datetime.2", "enddate"}, {"datetime.3", "hours"}})
 // 
         in
-        Table;
+       LateTbale;
 // Data Source Kind description
 DingDing = [
     Authentication = [
